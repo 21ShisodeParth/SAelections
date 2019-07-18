@@ -28,8 +28,8 @@ def bow_extractor(tweets):
     bow_vectorizer = CountVectorizer(max_df=0.90, min_df=2, max_features=1000, stop_words='english')
     return bow_vectorizer.fit_transform(tweets)
 
-trump_positive = ['#draintheswamp', '#crookedhillary', '#makeamericagreatagain', '#maga', '#lockherup', '#trumpforpresident']
-trump_negative = ['#imwithher', '#nevertrump', '#strongertogether', '#clinton2016']
+trump_positive = ['#draintheswamp', '#crookedhillary', '#makeamericagreatagain', '#maga', '#lockherup', '#trumpforpresident', '#votetrump']
+trump_negative = ['#imwithher', '#nevertrump', '#strongertogether', '#clinton2016', '#votehillary', '#hillaryforpresident', '#deleteyouraccount', '#basketofdeplorables']
 trump_positive_tweets = []
 trump_negative_tweets = []
 neutral = []
@@ -67,7 +67,22 @@ for tweet in all_tweets:
 bow_tweets = bow_extractor(all_tweets)
 train_X, test_X, train_Y, test_Y = train_test_split(bow_tweets, Y, test_size=0.3, random_state=21)
 logRegModel = LogisticRegressionCV(cv=5, max_iter=10000, multi_class='multinomial').fit(train_X, train_Y)
+pred_Y = logRegModel.predict(test_X)
 print(logRegModel.score(test_X, test_Y))
-# Originall 17, 22
 
-# 859, 601
+# Calculate Votes
+def calc_votes(Y_pred):
+    trump_votes = 0
+    clinton_votes = 0
+    for val in Y_pred:
+        if val == 1:
+            trump_votes += 1
+        elif val == 0:
+            trump_votes += 0.5
+            clinton_votes += 0.5
+        elif val == -1:
+            clinton_votes += 1
+    print(f"Trump popular vote: {(trump_votes / (trump_votes + clinton_votes)) * 100}%")
+    print(f"Clinton popular vote: {(clinton_votes / (trump_votes + clinton_votes)) * 100}%")
+
+calc_votes(pred_Y)

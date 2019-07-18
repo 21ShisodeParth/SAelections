@@ -1,40 +1,6 @@
-import io
-import json
-import re
 import tweepy
 from tweepy import TweepError, RateLimitError
 
-'''
-consumer_key = 'RCTWX5r0BO0zyjQ50OS268ncR'
-consumer_secret = 'WI0HvC6l48acFfwHzs2cdNPIDOX7GGd7mpqGJp6gj91leqaz2a'
-access_token = '1147242589763985408-NRlVMq7EhFJD8dP2Y2RTwBtdkPtueu'
-access_token_secret = 'aOrlhXbs8o8MNHwxCtml7jyHwpW3UyTMzL7pQ5Zqd92oB'
-auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-auth.set_access_token(access_token, access_token_secret)
-api = tweepy.API(auth)
-
-def get_tweets(count):
-    tweets = []
-    target = io.open("mytweets.txt", 'w', encoding='utf-8')
-    a= str("#maga")
-    fetched_tweets = api.search(q=a, count=count)
-    print(len(fetched_tweets))
-
-    for tweet in fetched_tweets:
-        parsed_tweet = {}
-        parsed_tweet['text'] = tweet.text
-        if "http" not in tweet.text:
-            line = re.sub("[^A-Za-z]", " ", tweet.text)
-            target.write(line+"\n")
-    return tweets
-
-    # creating object of TwitterClient Class
-    # calling function to get tweets
-tweets = get_tweets(count=50)
-tweets_file = io.open("mytweets.txt", 'r', encoding='utf-8')
-for line in tweets_file:
-    print(line)
-'''
 consumer_key = 'RCTWX5r0BO0zyjQ50OS268ncR'
 consumer_secret = 'WI0HvC6l48acFfwHzs2cdNPIDOX7GGd7mpqGJp6gj91leqaz2a'
 access_token = '1147242589763985408-NRlVMq7EhFJD8dP2Y2RTwBtdkPtueu'
