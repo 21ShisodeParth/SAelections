@@ -1,0 +1,97 @@
+import re
+
+from nltk import PorterStemmer
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB, BernoulliNB
+from textblob import TextBlob
+
+content = None
+
+with open('tweet-text.txt', 'r', encoding='utf-8') as file:
+    content = [x.strip() for x in file.readlines()]
+
+def process_string(str):
+    stemmer = PorterStemmer()
+    processed = re.sub("@[\w]*", '', str).lower()  # Remove @users
+    processed = re.sub(r'http\S+', '', processed)  # Remove links
+    processed = processed.replace("rt : ", "")
+    processed = ' '.join(re.sub("(@[A-Za-z0-9]+)|([^0-9A-Za-z \t]) | (\w+:\/ \/ \S+)", " ", processed).split())
+    split_processed = processed.split()
+    for i, str in enumerate(split_processed):
+        split_processed[i] = stemmer.stem(str)
+    return ' '.join(split_processed)
+
+for i, string in enumerate(content):
+    content[i] = process_string(string)
+
+def bow_extractor(tweets):
+    bow_vectorizer = CountVectorizer(max_df=0.90, min_df=2, max_features=1000, stop_words='english')
+    return bow_vectorizer.fit_transform(tweets)
+
+trump_positive = ['#draintheswamp', '#crookedhillary', '#makeamericagreatagain', '#maga', '#lockherup', '#trumpforpresident', '#votetrump']
+trump_negative = ['#imwithher', '#nevertrump', '#strongertogether', '#clinton2016', '#votehillary', '#hillaryforpresident', '#deleteyouraccount', '#basketofdeplorables']
+trump_positive_tweets = []
+trump_negative_tweets = []
+neutral = []
+
+for i in range(len(content)):
+    tweet = content[i]
+    polarity = TextBlob(tweet).sentiment.polarity
+    if any(x in tweet.lower() for x in trump_positive):
+        trump_positive_tweets.append(tweet)
+    elif any(x in tweet.lower() for x in trump_negative):
+        trump_negative_tweets.append(tweet)
+    elif polarity < 0:
+        if "trump" or "donald" in tweet.lower():
+            trump_negative_tweets.append(tweet)
+        elif "clinton" or "hillary" in tweet.lower():
+            trump_positive_tweets.append(tweet)
+    elif polarity > 0:
+        if "trump" or "donald" in tweet.lower():
+            trump_positive_tweets.append(tweet)
+        elif "clinton" or "hillary" in tweet.lower():
+            trump_negative_tweets.append(tweet)
+    else:
+        neutral.append(tweet)
+
+all_tweets = trump_positive_tweets + trump_negative_tweets + neutral
+Y = []
+for tweet in all_tweets:
+    if tweet in trump_positive_tweets:
+        Y.append(1)
+    elif tweet in trump_negative_tweets:
+        Y.append(-1)
+    elif tweet in neutral:
+        Y.append(0)
+
+bow_tweets = bow_extractor(all_tweets)
+train_X, test_X, train_Y, test_Y = train_test_split(bow_tweets, Y, test_size=0.3, random_state=21)
+train_X = train_X.toarray()
+bayes = BernoulliNB().fit(train_X, train_Y)
+test_X = test_X.toarray()
+print(bayes.score(test_X, test_Y))
+pred_Y = bayes.predict(test_X)
+# Calculate Votes
+def calc_votes(Y_pred):
+    trump_votes = 0
+    clinton_votes = 0
+    for val in Y_pred:
+        if val == 1:
+            trump_votes += 1
+        elif val == 0:
+            trump_votes += 0.5
+            clinton_votes += 0.5
+        elif val == -1:
+            clinton_votes += 1
+    print(f"Trump popular vote: {(trump_votes / (trump_votes + clinton_votes)) * 100}%")
+    print(f"Clinton popular vote: {(clinton_votes / (trump_votes + clinton_votes)) * 100}%")
+
+calc_votes(pred_Y)
+'''
+0.6937984496124031
+Trump popular vote: 60.07751937984496%
+Clinton popular vote: 39.922480620155035%
+
+Process finished with exit code 0
+'''
